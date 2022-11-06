@@ -26,11 +26,11 @@ runs:
       if: ${{ inputs.pipeline-action == 'CI' }}
     
     - name: tfsec
-      uses: tfsec/tfsec-pr-commenter-action@main
+      uses: tfsec/tfsec-pr-commenter-action@v0.1.4
       if: ${{ inputs.pipeline-action != 'CI' }}
 
     - name: tfsec
-      uses: tfsec/tfsec-sarif-action@main
+      uses: tfsec/tfsec-sarif-action@v0.1.4
       with:
         sarif_file: tfsec.sarif
 
