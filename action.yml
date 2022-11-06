@@ -35,7 +35,13 @@ runs:
         sarif_file: tfsec.sarif 
       if: ${{ inputs.pipeline-action == 'PR' }}
 
-    - run: terraform plan
+    - name: Terraform Initalization
+      run: terraform init
+      shell: bash
+      if: ${{ inputs.pipeline-action == 'CI' }}
+
+    - name: Terraform Plan
+      run: terraform plan
       shell: bash
       if: ${{ inputs.pipeline-action == 'CI' }}
 
