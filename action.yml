@@ -14,7 +14,7 @@ runs:
   steps:
     - run: echo Hello CI
       shell: bash
-      if: ${{ input.pipeline-action == "CI" }}
+      if: ${{ inputs.pipeline-action == "CI" }}
     - id: random-number-generator
       run: echo "random-number=$(echo $RANDOM)" >> $GITHUB_OUTPUT
       shell: bash
