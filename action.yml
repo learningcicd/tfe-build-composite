@@ -12,9 +12,35 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - run: |
+            sudo apt install curl
+            curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+            sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+            sudo apt update
+            sudo apt-get install terraform
+      shell: bash
+
+    
     - run: echo Hello CI
       shell: bash
       if: ${{ inputs.pipeline-action == 'CI' }}
+    
+    - name: tfsec
+      uses: tfsec/tfsec-pr-commenter-action@main
+      with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      if: ${{ inputs.pipeline-action != 'CI' }}
+
+    - name: tfsec
+      uses: tfsec/tfsec-sarif-action@main
+      with:
+        sarif_file: tfsec.sarif
+
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: tfsec.sarif   
+
     - id: random-number-generator
       run: echo "random-number=$(echo $RANDOM)" >> $GITHUB_OUTPUT
       shell: bash
