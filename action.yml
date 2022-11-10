@@ -19,8 +19,9 @@ runs:
             sudo apt update
             sudo apt-get install terraform
       shell: bash
-
-    
+    - run: echo "$GOOGLE_APPLICATION_CREDENTIALS_DATA" > gcloud_app.json
+      shell: bash    
+      
     - run: echo Hello CI
       shell: bash
       if: ${{ inputs.pipeline-action == 'CI' }}
