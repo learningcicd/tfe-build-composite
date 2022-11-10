@@ -36,7 +36,7 @@ runs:
       if: ${{ inputs.pipeline-action == 'PR' }}
 
     - name: Terraform Initalization
-      run: terraform init
+      run: pwd && ls -ltr && terraform init
       shell: bash
       if: ${{ inputs.pipeline-action == 'CI' }}
 
