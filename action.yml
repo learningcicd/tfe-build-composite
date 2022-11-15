@@ -20,31 +20,19 @@ runs:
             sudo apt-get install terraform
       shell: bash
     - run: echo "$GOOGLE_APPLICATION_CREDENTIALS_DATA" > gcloud_app.json
-      shell: bash    
-      
-    - run: echo Hello CI
-      shell: bash
-      if: ${{ inputs.pipeline-action == 'CI' }}
-    
-    - name: tfsec
-      uses: tfsec/tfsec-pr-commenter-action@v0.1.4
-      if: ${{ inputs.pipeline-action == 'PR' }}
-
-    - name: tfsec
-      uses: tfsec/tfsec-sarif-action@v0.1.4
-      with:
-        sarif_file: tfsec.sarif 
-      if: ${{ inputs.pipeline-action == 'PR' }}
+      shell: bash 
 
     - name: Terraform Initalization
       run: pwd && ls -ltr && terraform init
       shell: bash
-      if: ${{ inputs.pipeline-action == 'CI' }}
 
     - name: Terraform Plan
       run: terraform plan
       shell: bash
-      if: ${{ inputs.pipeline-action == 'CI' }}
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+      shell: bash
 
     - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
       shell: bash
