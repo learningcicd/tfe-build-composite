@@ -11,31 +11,20 @@ outputs:
     value: ${{ steps.random-number-generator.outputs.random-number }}
 runs:
   using: "composite"
-  steps:
-    - run: |
-            sudo apt install curl
-            curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-            sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-            sudo apt update
-            sudo apt-get install terraform
-      shell: bash
-    - run: echo "$GOOGLE_APPLICATION_CREDENTIALS_DATA" > gcloud_app.json
-      shell: bash 
-
-    - name: Terraform Initalization
-      run: pwd && ls -ltr && terraform init
+  steps:    
+    - name: Download the ShiftLeft CLI and set permissions
+      run: |
+        curl https://cdn.shiftleft.io/download/sl > ${GITHUB_WORKSPACE}/sl && chmod a+rx ${GITHUB_WORKSPACE}/sl
       shell: bash
 
-    - name: Terraform Plan
-      run: terraform plan
-      shell: bash
+    # ShiftLeft requires Java 1.8
+    - name: Set up Java
+      uses: actions/setup-java@v1.4.3
+      with:
+        java-version: 1.8
 
-    - name: Terraform Apply
-      run: terraform apply -auto-approve
-      shell: bash
-
-    - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
-      shell: bash
-
-    - run: ls -ltr
+    - name: NextGen Static Analysis
+      run: ${GITHUB_WORKSPACE}/sl analyze --app ShiftLeftTerraform --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --terraform .
+      env:
+        SHIFTLEFT_ACCESS_TOKEN: ${{ secrets.SHIFTLEFT_ACCESS_TOKEN }}
       shell: bash
