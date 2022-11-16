@@ -26,5 +26,5 @@ runs:
     - name: NextGen Static Analysis
       run: ${GITHUB_WORKSPACE}/sl analyze --app ShiftLeftTerraform --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --terraform .
       env:
-        SHIFTLEFT_ACCESS_TOKEN: ${{ secrets.SHIFTLEFT_ACCESS_TOKEN }}
+        SHIFTLEFT_ACCESS_TOKEN: "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2Njg0OTg4NTIsImlzcyI6IlNoaWZ0TGVmdCIsIm9yZ0lEIjoiNTZiZTU3NmUtOWQwZS00MDQ4LWIwMzktNzZhOWFiYWEwYTM3IiwidXNlcklEIjoiODBjOGExZTMtNzI2NC00MjNmLWJiMjktMmZkZTIxMmExNzlmIiwic2NvcGVzIjpbInNlYXRzOndyaXRlIiwiZXh0ZW5kZWQiLCJhcGk6djIiLCJ1cGxvYWRzOndyaXRlIiwibG9nOndyaXRlIiwicGlwZWxpbmVzdGF0dXM6cmVhZCIsIm1ldHJpY3M6d3JpdGUiLCJwb2xpY2llczpjdXN0b21lciJdfQ.Yv6TL56xyh5uN2CuDTwRKxy6nWMqhtWQIksNxRxaFt96IcKdOJ0w2Hs76DDHlOm7gBaYoi6I2TrmKL9y0n_AB4unvwmCeVu4ldE2mOLe-tesXVguoLsqgJ8fgsDjCr6TJC2eTNVibPG7TshREc0XG0KlUR-GgwpVA6gmR0Fuw5LI8XntW8bgNJboev1_aTPaC7AQclIpRlM-7m8v_meY6UhiXSNe8Hpv_R4fun6dc6sIDocS9ejlk2WLKKKfqLwpuJtq4xfBroByaEdmTkGMPV6ijmqKf_lL-5Xu95AymbGRyx3B85qsNCbdshwtLa_84GGXMKFKRnpMeMePNuR7JA"
       shell: bash
