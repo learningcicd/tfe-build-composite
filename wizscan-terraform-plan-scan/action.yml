@@ -29,7 +29,7 @@ runs:
         wizcli auth --id ${{ inputs.WIZ_ID }} --secret ${{ inputs.WIZ_SECRET }}
         echo "::endgroup::"
     - name: Convert terraform plan to json
-      shll: bash
+      shell: bash
       run: |
         terraform show -json ${{ inputs.PATH }} >> terraform-plan.json
     - name: Scan Dockerfile
