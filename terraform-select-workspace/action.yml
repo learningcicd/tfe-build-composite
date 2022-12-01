@@ -1,0 +1,28 @@
+name: 'Terraform Workspace'
+description: 'Select Terraform Workspace'
+inputs:
+  workspace-name:
+    description: 'Terraform workspace name'
+    required: true
+  secret:
+    description: 'Terraform secret'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Terraform install
+      shell: bash
+      run: |
+        echo "::group::Terraform install"
+        wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+        sudo apt update && sudo apt install terraform
+        echo "::endgroup::"
+    - name: Terraform init
+      shell: bash
+      run: |
+        echo "::group::Terraform workspace select"
+        rm -rf .terraform
+        terraform init -upgrade
+        terraform workspace select -no-color ${{ inputs.workspace-name }}
+        echo "::endgroup::"

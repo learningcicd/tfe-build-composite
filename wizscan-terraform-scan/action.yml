@@ -1,0 +1,36 @@
+name: 'WizScan Terraform Scan'
+description: 'Scans the given Terraform using WizScan.'
+inputs:
+  WIZ_ID:
+    description: 'WIZ_ID for WizScan auth.'
+    required: true
+  WIZ_SECRET:
+    description: 'WIZ_SECRET for WizScan auth.'
+    required: true
+  PATH:
+    description: 'Path of the folder for the Terraforms to scan.'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Install WizCli
+      shell: bash
+      run: | 
+        echo "::group::Installation Logs"
+        curl -o wizcli https://wizcli.app.wiz.io/wizcli
+        chmod +x wizcli 
+        mv wizcli /usr/local/bin
+        wizcli version 
+        echo "::endgroup::"
+    - name: WizCli Authentication
+      shell: bash
+      run: |
+        echo "::group::Authentication Logs"
+        wizcli auth --id ${{ inputs.WIZ_ID }} --secret ${{ inputs.WIZ_SECRET }}
+        echo "::endgroup::"
+    - name: Scan Dockerfile
+      shell: bash
+      run: |
+        echo "::group::WizCli scan"
+        wizcli iac scan --path ${{ inputs.PATH }} --policy-hits-only -p "policy-name"
+        echo "::endgroup::"        

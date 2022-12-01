@@ -1,0 +1,25 @@
+name: 'Terraform Workspace'
+description: 'Creates Terraform Workspace'
+inputs:
+  var-file-path:
+    description: 'Terraform variable file path'
+    required: true
+  GITHUB_TOKEN:
+    description: 'Github PAT token'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Create github release
+      uses: ./.github/actions/release-generator
+      with:
+        github-token: ${{ inputs.GITHUB_TOKEN }}
+        attachment-path: ./terraform.plan
+        attachment-name: terraform.plan
+        attachment-content-type: application/text
+    - name: Terraform apply
+      shell: bash
+      run: |
+        echo "::group::Terraform workspace apply"
+        terraform apply -auto-approve terraform.plan #-var-file=${{ inputs.var-file-path }} 
+        echo "::endgroup::"

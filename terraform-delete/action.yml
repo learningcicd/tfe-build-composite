@@ -1,0 +1,17 @@
+name: 'Terraform Workspace'
+description: 'Deletes Terraform Workspace'
+inputs:
+  workspace-name:
+    description: 'Terraform workspace name'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Terraform Workspace Destroy
+      shell: bash
+      run: |
+        echo "::group::Terraform workspace destroy"
+        terraform init -upgrade
+        terraform workspace select ${{ inputs.workspace-name }} 
+        terraform destroy -no-color -auto-approve
+        echo "::endgroup::"

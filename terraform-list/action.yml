@@ -1,0 +1,11 @@
+name: 'Terraform Workspace'
+description: 'Creates Terraform List'
+runs:
+  using: "composite"
+  steps:
+    - name: Terraform List
+      shell: bash
+      run: |
+        echo "::group::Terraform workspace list"
+        terraform workspace list
+        echo "::endgroup::"

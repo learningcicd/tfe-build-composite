@@ -1,0 +1,24 @@
+name: 'Checkov Terraform Scan'
+description: 'Scans the given Terraform using Checkov.'
+inputs:
+  terraform-folder-path:
+    description: 'Path of the folder for the Terraforms to scan.'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - name: Setup Checkov
+      shell: bash
+      run: |
+        echo "::group::Installation Logs"
+        python -m pip install --upgrade pip
+        pip install checkov
+        echo "::endgroup::"
+    - name: Scan Dockerfile
+      shell: bash
+      run: |
+        checkov -d ${{ inputs.terraform-folder-path }} --framework terraform

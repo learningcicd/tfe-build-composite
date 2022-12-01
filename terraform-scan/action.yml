@@ -1,0 +1,31 @@
+name: 'Terraform Scan'
+description: 'Scans the given Terraform'
+inputs:
+  SHIFTLEFT_ACCESS_TOKEN:
+    description: 'ShiftLeft access token.'
+    required: true
+  APP_NAME:
+    description: 'ShiftLeft app name.'
+    required: true
+runs:
+  using: "composite"
+  steps:
+
+    - name: Download the ShiftLeft CLI and set permissions
+      shell: bash
+      run: |
+        echo "::group::ShiftLeft install"
+        curl https://cdn.shiftleft.io/download/sl > ${GITHUB_WORKSPACE}/sl && chmod a+rx ${GITHUB_WORKSPACE}/sl
+        echo "::endgroup::"
+    - name: Set up Java
+      uses: actions/setup-java@v1.4.3
+      with:
+        java-version: 1.8
+    - name: NextGen Static Analysis
+      shell: bash
+      run: |
+        echo "::group::ShiftLeft Terraform Scan"
+        ${GITHUB_WORKSPACE}/sl analyze --app ${{ inputs.APP_NAME }} --tag branch=${{ github.head_ref || steps.extract_branch.outputs.branch }} --terraform .
+        echo "::endgroup::"
+      env:
+        SHIFTLEFT_ACCESS_TOKEN: ${{ inputs.SHIFTLEFT_ACCESS_TOKEN }}

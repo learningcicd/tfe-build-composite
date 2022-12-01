@@ -1,0 +1,33 @@
+name: 'Checkov Terraform Plan Scan'
+description: 'Scans the given Terraform Plan file using Checkov.'
+inputs:
+  dir:
+    description: 'Path of the directory containing terraform files.'
+    required: true
+  plan-file:
+    description: 'Name of the Terraform Plan file to scan.'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    
+    - name: Setup Checkov
+      shell: bash
+      run: |
+        echo "::group::Installation Logs"
+        python -m pip install --upgrade pip
+        pip install checkov
+        echo "::endgroup::"
+    
+    - name: Scan Terraform Plan File
+      shell: bash
+      run: |
+        echo "::group::Terraform Plan Scan Result"
+        cd ${{ inputs.dir }}
+        terraform show -json ${{ inputs.plan-file }} | jq '.' > tfplan.json
+        checkov -f tfplan.json --quiet
+        echo "::endgroup::"
