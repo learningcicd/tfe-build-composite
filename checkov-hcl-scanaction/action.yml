@@ -1,0 +1,30 @@
+name: 'Checkov HCL Scan'
+description: 'Scans the given Repo using Checkov.'
+inputs:
+  BC_API_KEY:
+    description: 'API key.'
+    required: true
+  terraform-folder-path:
+    description: 'Path of the folder for the Terraforms to scan.'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - name: Setup Checkov
+      shell: bash
+      run: |
+        echo "::group::Installation Logs"
+        python -m pip install --upgrade pip
+        pip install checkov
+        echo "::endgroup::"
+    - name: Scan Dockerfile
+      shell: bash
+      run: |
+        checkov -d . --repo-id ${{ github.repository }} --branch ${{ github.ref_name }}
+      env: 
+        PRISMA_API_URL: "https://YOUR_URL"
+        BC_API_KEY: ${{ inputs.BC_API_KEY }}
