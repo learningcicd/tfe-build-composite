@@ -1,0 +1,33 @@
+name: 'Checkov Prisma Terraform Plan Scan'
+description: 'Scans the given plan file using Checkov.'
+inputs:
+  BC_API_KEY:
+    description: 'API key.'
+    required: true
+  PRISMA_API_URL:
+    description: 'Prisma API URL.'
+    required: true
+  PLAN_FILE_PATH:
+    description: 'Terraform plan file path.'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - name: Setup Checkov
+      shell: bash
+      run: |
+        echo "::group::Installation Logs"
+        python -m pip install --upgrade pip
+        pip install checkov
+        echo "::endgroup::"
+    - name: Scan Dockerfile
+      shell: bash
+      run: |
+        checkov -f ${{ inputs.PLAN_FILE_PATH }}
+      env: 
+        PRISMA_API_URL: ${{ inputs.PRISMA_API_URL }}
+        BC_API_KEY: ${{ inputs.BC_API_KEY }}
