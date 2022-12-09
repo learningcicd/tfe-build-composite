@@ -27,7 +27,8 @@ runs:
     - name: Scan Dockerfile
       shell: bash
       run: |
-        checkov -f ${{ inputs.PLAN_FILE_PATH }}
+        terraform show -json ${{ inputs.PLAN_FILE_PATH }} | jq '.' > tfplan.json
+        checkov -f tfplan.json
       env: 
         PRISMA_API_URL: ${{ inputs.PRISMA_API_URL }}
         BC_API_KEY: ${{ inputs.BC_API_KEY }}
