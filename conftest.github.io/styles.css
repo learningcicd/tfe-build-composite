@@ -1,0 +1,24 @@
+code {
+    background-color: #f6f6fa;
+    border-radius: 3px;
+    font-family: courier, monospace;
+    padding: 0 3px;
+}
+.prettyprint {
+    background-color: #f6f6fa !important;
+}
+pre {
+    white-space: pre-wrap;
+}
+a{
+    text-decoration:none
+}
+html{
+    
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-top: 3%;
+}
+li:not(:last-child) {
+    margin-bottom: 8px;
+}

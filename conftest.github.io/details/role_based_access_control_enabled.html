@@ -1,0 +1,56 @@
+<html>
+<head>
+  <title></title>
+  <link rel="stylesheet" href="../styles.css">
+</head><body>
+
+  <h1>Ensure Azure AKS enable RBAC is enforced</h1>
+  <p>Using Kubernetes role-based access control (RBAC), you can grant users, groups, and service accounts access to only the resources they need.</p>
+  <h5>Rego Policy</h5>
+  <pre class="prettyprint"><code>
+    package main
+    deny[msg] {
+        some i
+        enabled := input.resource_changes[i].change.after.role_based_access_control_enabled
+        aztype := input.resource_changes[i].type
+        name := input.resource_changes[i].name
+        guide := "http://myguide.com"
+        aztype == "azurerm_kubernetes_cluster"
+        enabled!=true
+        message := "Azure AKS enable RBAC not enforced, 'role_based_access_control_enabled' must not be equal to 'false'"
+        msg := sprintf("\n\tResource:azurerm_kubernetes_cluster\n\t Resource name:%s\n\tMessage:%s.\n\tGuide:%s",[name,message,guide])
+    }
+  </code></pre>
+  <h5>Terraform code for testing the policy</h5>
+  <pre class="prettyprint"><code>
+    resource "azurerm_kubernetes_cluster" "aks_cluster" {
+        name                = "${azurerm_resource_group.aks_rg.name}-cluster"
+        location            = azurerm_resource_group.aks_rg.location
+        resource_group_name = azurerm_resource_group.aks_rg.name
+
+        role_based_access_control_enabled=false #This setting violates the policy
+    }
+  </code></pre>
+  <h5>Policy violation example</h5>
+  <pre class="prettyprint"><code>
+    C:\conftest-terraform\az-k8s>conftest test output.json -p ../conftest/role_based_access_control_enabled.rego
+    FAIL - output.json - main -
+        Resource:azurerm_kubernetes_cluster
+         Resource name:aks_cluster
+        Message:Azure AKS enable RBAC not enforced, 'role_based_access_control_enabled' must not be equal to 'false'.
+        Guide:http://myguide.com
+
+    1 test, 0 passed, 0 warnings, 1 failure, 0 exceptions
+  </code></pre>
+  <h5>Remediation</h5>
+  <p>'role_based_access_control_enabled' must be set to 'true'</p>
+  <pre class="prettyprint"><code>
+    resource "azurerm_kubernetes_cluster" "aks_cluster" {
+        name                = "${azurerm_resource_group.aks_rg.name}-cluster"
+        location            = azurerm_resource_group.aks_rg.location
+        resource_group_name = azurerm_resource_group.aks_rg.name
+
+        role_based_access_control_enabled=true #This resolves the policy violation
+    }
+  </code></pre>
+</body></html>
