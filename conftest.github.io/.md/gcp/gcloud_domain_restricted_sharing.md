@@ -1,0 +1,191 @@
+## Ensure domain restricted sharing is enabled
+
+Restrict which domains can be added to an IAM policy and get permissions on your resources. 
+
+**Rego Policy:**
+
+```rego
+package main
+    import future.keywords.in
+    
+    # List of domains that are allowed to be added to IAM policies
+    allowed_domains = ["example.com", "example.org"]
+    
+    has_field(obj, field) {
+        obj[field]
+    }
+    # Check if a domain is allowed
+    is_allowed_domain(domain) {
+        domain in allowed_domains
+    }
+    
+    # Check if a user is in an allowed domain
+    is_allowed_user(user) {
+        count(split(user, "@"))>1
+        split(user, "@")[1] in allowed_domains
+    }
+    
+    # Deny if an IAM policy binding is not from an allowed domain
+    deny_binding[msg] {
+        # Iterate over the resource changes
+        some i
+        type := input.resource_changes[i].type
+        # Check if the resource is an IAM policy binding
+        type == "google_project_iam_binding" 
+        # Check if the binding has members
+        binding_has_members := has_field(input.resource_changes[i].change.after, "members")
+        # If it has members, check if they are from allowed domains
+        binding_has_members
+    
+        count(input.resource_changes[i].change.after.members)>0
+        member:=input.resource_changes[i].change.after.members[_]
+        not startswith(member,"domain")
+        not is_allowed_user(member)	
+        
+        # Set the message for the denial
+        name := input.resource_changes[i].name
+        guide := "http://myguide.com"
+        message := sprintf("IAM binding '%s' is not from an allowed domain. Only users from the following domains are allowed: %s", [name, allowed_domains])
+        msg := sprintf("\n\tResource: %s\n\tResource name: %s\n\tMessage: %s\n\tGuide: %s", [type, name, message, guide])
+       }
+       
+    # Deny if an IAM policy domain is not from an allowed domain
+    deny_binding[msg] {
+        # Iterate over the resource changes
+        some i
+        type := input.resource_changes[i].type
+        # Check if the resource is an IAM policy binding
+        type == "google_project_iam_binding" 
+        # Check if the binding has members
+        binding_has_members := has_field(input.resource_changes[i].change.after, "members")
+        # If it has members, check if they are from allowed domains
+        binding_has_members
+        count(input.resource_changes[i].change.after.members) > 0
+        member:=input.resource_changes[i].change.after.members[_]
+        split(member,":") > 1
+        member_domain:=split(member,":")
+        member_domain[0]=="domain"
+        not is_allowed_domain(member_domain[1])
+        
+        # Set the message for the denial
+        name := input.resource_changes[i].name
+        guide := "http://myguide.com"
+        message := sprintf("IAM binding '%s' is not from an allowed domain. Only following domains are allowed: %s", [name, allowed_domains])
+        msg := sprintf("\n\tResource: %s\n\tResource name: %s\n\tMessage: %s\n\tGuide: %s", [type, name, message, guide])
+       }
+       
+    # Deny if an IAM policy member is not from an allowed domain
+    deny_member[msg] {
+        # Iterate over the resource changes
+        some i
+        type := input.resource_changes[i].type
+        # Check if the resource is an IAM policy member
+        type == "google_project_iam_member"
+        binding_has_member := has_field(input.resource_changes[i].change.after, "member")
+        # If it has members, check if they are from allowed domains
+        binding_has_member
+        member := input.resource_changes[i].change.after.member
+        not startswith(member,"domain")
+        # Check if the member is from an allowed domain
+        not is_allowed_user(member)
+        
+        # Set the message for the denial
+        name := input.resource_changes[i].name
+        guide := "http://myguide.com"
+        message := sprintf("IAM member '%s' is not from an allowed domain. Only users from the following domains are allowed: %s", [name, allowed_domains])
+        msg := sprintf("\n\tResource: %s\n\tResource name: %s\n\tMessage: %s\n\tGuide: %s", [type, name, message, guide])	
+    }
+    
+    # Deny if an IAM policy member is not from an allowed domain
+    deny_member[msg] {
+        # Iterate over the resource changes
+        some i
+        type := input.resource_changes[i].type
+        # Check if the resource is an IAM policy member
+        type == "google_project_iam_member"
+        binding_has_member := has_field(input.resource_changes[i].change.after, "member")
+        # If it has members, check if they are from allowed domains
+        binding_has_member
+        member := input.resource_changes[i].change.after.member
+        # Check if the domain is from an allowed domain
+        count(split(member,":"))>1
+        member_domain:=split(member,":")
+        member_domain[0]=="domain"
+        not is_allowed_domain(member_domain[1])
+        
+        # Set the message for the denial
+        name := input.resource_changes[i].name
+        guide := "http://myguide.com"
+        message := sprintf("IAM member '%s' is not from an allowed domain. Only the following domains are allowed: %s", [name, allowed_domains])
+        msg := sprintf("\n\tResource: %s\n\tResource name: %s\n\tMessage: %s\n\tGuide: %s", [type, name, message, guide])	
+    }  
+```
+
+**Terraform code for testing the Policy:**
+
+```tf
+resource "google_project_iam_binding" "binding" {
+        project = "my-project"
+        role    = "roles/storage.admin"
+      
+        members = [
+          "user:user1@example.com",
+          "user:user2@example.org",
+          "user:user3@example.com",
+          "user:user4@invalid.com", #This violate the rego policy
+        ]
+      }
+      
+      resource "google_project_iam_member" "member" {
+        project = "my-project"
+        role    = "roles/storage.admin"
+        member  = "domain:invalid.com" #This violate the rego policy
+      }
+```
+
+**Policy Violation Example:**
+
+```bash
+    C:\conftest-terraform\gcloud-sql-instance>conftest test output.json -p ../conftest/gcloud_domain_restricted_sharing.rego
+    FAIL - output.json - main - 
+        Resource: google_project_iam_binding
+        Resource name: binding
+        Message: IAM binding 'binding' is not from an allowed domain. Only users from the following domains are allowed: ["example.com", "example.org"]
+        Guide: http://myguide.com
+
+    FAIL - output.json - main - 
+            Resource: google_project_iam_member
+            Resource name: member
+            Message: IAM member 'member' is not from an allowed domain. Only the following domains are allowed: ["example.com", "example.org"]    
+            Guide: http://myguide.com
+
+    4 tests, 2 passed, 0 warnings, 2 failures, 0 exceptions
+  ```
+
+**Remediation:**
+
+`members` must be from allowed valid doman.
+
+An example terraform code which violates the policy is given below along with remediation:
+
+```terraform
+resource "google_project_iam_binding" "binding" {
+        project = "my-project"
+        role    = "roles/storage.admin"
+      
+        members = [
+          "user:user1@example.com",
+          "user:user2@example.org",
+          "user:user3@example.com",
+          "user:user4@example.com", #This resolves the policy violation
+        ]
+      }
+      
+    resource "google_project_iam_member" "member" {
+    project = "my-project"
+    role    = "roles/storage.admin"
+    member  = "domain:example.com" #This resolves the policy violation
+    }
+```
+
+---
